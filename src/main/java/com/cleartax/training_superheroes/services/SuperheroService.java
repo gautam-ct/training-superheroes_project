@@ -1,0 +1,88 @@
+package com.cleartax.training_superheroes.services;
+
+import com.cleartax.training_superheroes.dto.Superhero;
+import com.cleartax.training_superheroes.dto.SuperheroRequestBody;
+import com.cleartax.training_superheroes.repos.SuperheroRepository;
+import org.springframework.stereotype.Service;
+
+@Service
+public class SuperheroService {
+
+    private SuperheroRepository superheroRepository;
+
+    public SuperheroService(SuperheroRepository superheroRepository){
+        this.superheroRepository = superheroRepository;
+    }
+
+    public Superhero getSuperhero(String name, String universe) {
+        if (name != null && universe != null) {
+            return getByNameAndUniverse(name, universe);
+        } else if (name != null) {
+            return getByName(name);
+        } else if (universe != null) {
+            return getByUniverse(universe);
+        } else {
+            throw new RuntimeException("Invalid query parameters");
+        }
+    }
+
+    public Superhero updateSuperhero(String name , String universe , SuperheroRequestBody updateDeatails){
+            Superhero superhero = getByNameAndUniverse(name, universe);
+            superhero.setName(updateDeatails.getName());
+            superhero.setUniverse(updateDeatails.getUniverse());
+            return superheroRepository.save(superhero);
+    }
+
+    private Superhero getByName(String name){
+        Superhero superhero = superheroRepository.findByName(name);
+        if(null != superhero){
+            return superhero;
+        }
+        throw new RuntimeException("Name not found");
+    }
+
+    private Superhero  getByUniverse(String universe){
+        Superhero superhero = superheroRepository.findByUniverse(universe);
+        if(null != superhero){
+            return superhero;
+        }
+        throw new RuntimeException("Universe Not found");
+    }
+
+    private  Superhero getByNameAndUniverse(String name, String universe){
+        Superhero superhero = superheroRepository.findByNameAndUniverse(name, universe);
+        if (superhero == null) {
+            throw new RuntimeException("Superhero not found with name: " + name + " and universe: " + universe);
+        }
+        return superhero;
+    }
+//    private Superhero getDummyDate(String name){
+//        Superhero superhero =  new Superhero();
+//        superhero.setName(name);
+//        return superhero;
+//    }
+public boolean deleteSuperhero(String name, String universe) {
+    Superhero superhero = superheroRepository.findByNameAndUniverse(name, universe);
+    if (superhero != null) {
+        superheroRepository.delete(superhero);
+        return true;
+    } else {
+        throw new RuntimeException("Superhero not found with name: " + name + " and universe: " + universe);
+    }
+}
+
+
+
+    public Superhero persistSuperhero(SuperheroRequestBody requestBody){
+        Superhero superhero = new Superhero();
+        superhero.setName(requestBody.getName());
+        superhero.setPower(requestBody.getPower());
+        superhero.setUniverse(requestBody.getUniverse());
+
+
+        return superheroRepository.save(superhero);
+    }
+
+
+}
+
