@@ -1,9 +1,12 @@
 package com.cleartax.training_superheroes.dto;
 
+import lombok.Getter;
+
+@Getter
 public class SuperheroRequestBody {
-    private String name;
-    private String power;
-    private String universe;
+    private final String name;
+    private final String power;
+    private final String universe;
 
     SuperheroRequestBody(String name, String power, String universe) {
         this.name = name;
@@ -13,18 +16,6 @@ public class SuperheroRequestBody {
 
     public static SuperheroRequestBodyBuilder builder() {
         return new SuperheroRequestBodyBuilder();
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public String getPower() {
-        return this.power;
-    }
-
-    public String getUniverse() {
-        return this.universe;
     }
 
     public static class SuperheroRequestBodyBuilder {

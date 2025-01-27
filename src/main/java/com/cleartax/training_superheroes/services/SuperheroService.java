@@ -15,6 +15,7 @@ public class SuperheroService {
     }
 
     public Superhero getSuperhero(String name, String universe) {
+        System.out.println("testing is started and query parameters" + universe + " " + name);
         if (name != null && universe != null) {
             return getByNameAndUniverse(name, universe);
         } else if (name != null) {
