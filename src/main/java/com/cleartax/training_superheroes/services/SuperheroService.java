@@ -39,7 +39,10 @@ public class SuperheroService {
         if(null != superhero){
             return superhero;
         }
-        throw new RuntimeException("Name not found");
+        else{
+            System.out.println("Superhero not found");
+            return null;
+        }
     }
 
     private Superhero  getByUniverse(String universe){
@@ -47,13 +50,17 @@ public class SuperheroService {
         if(null != superhero){
             return superhero;
         }
-        throw new RuntimeException("Universe Not found");
+        else{
+            System.out.println("Superhero not found");
+            return null;
+        }
     }
 
     private  Superhero getByNameAndUniverse(String name, String universe){
         Superhero superhero = superheroRepository.findByNameAndUniverse(name, universe);
         if (superhero == null) {
-            throw new RuntimeException("Superhero not found with name: " + name + " and universe: " + universe);
+            System.out.println("Superhero not found");
+
         }
         return superhero;
     }
@@ -71,8 +78,6 @@ public boolean deleteSuperhero(String name, String universe) {
         throw new RuntimeException("Superhero not found with name: " + name + " and universe: " + universe);
     }
 }
-
-
 
     public Superhero persistSuperhero(SuperheroRequestBody requestBody){
         Superhero superhero = new Superhero();

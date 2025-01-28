@@ -8,7 +8,6 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
-import com.cleartax.training_superheroes.config.SqsClientConfig;
 import com.cleartax.training_superheroes.config.SqsConfig;
 import com.cleartax.training_superheroes.dto.Superhero;
 import com.cleartax.training_superheroes.dto.SuperheroRequestBody;
@@ -17,9 +16,6 @@ import com.cleartax.training_superheroes.services.SuperheroService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
-import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
-import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 
 @RestController
 public class SuperheroController {
@@ -38,22 +34,41 @@ public class SuperheroController {
     @Autowired
     private AmazonSQS amazonSQS;
 
+
     @Autowired
-    public SuperheroController(SuperheroService superheroService, AmazonSQS amazonSQS) {
+    public SuperheroController(SuperheroService superheroService, AmazonSQS amazonSQS , SuperheroConsumer superheroConsumer) {
         this.superheroService = superheroService;
         this.amazonSQS = amazonSQS;
+        this.superheroConsumer = superheroConsumer;
     }
 
 
     @GetMapping("/hello")
-    public String hello(@RequestParam(value = "username", defaultValue = "World") String superHeroName) {
+    public String hello(
+            @RequestParam(value = "username", defaultValue = "World") String superHeroName,
+            @RequestParam(value = "universe", defaultValue = "Marvel") String universe) {
+
+        // Create a JSON-like message body
+        String messageBody = String.format("{\"superHeroName\":\"%s\", \"universe\":\"%s\"}", superHeroName, universe);
+
         // Send the message to LocalStack
         amazonSQS.sendMessage(new com.amazonaws.services.sqs.model.SendMessageRequest()
                 .withQueueUrl("http://sqs.ap-south-1.localhost.localstack.cloud:4566/000000000000/superhero-queue") // Your LocalStack queue URL
-                .withMessageBody(superHeroName)); // Message body
+                .withMessageBody(messageBody)); // JSON message body
 
+        return String.format("The superHeroName %s from %s universe!", superHeroName, universe);
+    }
 
-        return String.format("The superHeroName  %s!", superHeroName);
+   //hit the api to start the Scheduleder in superHeroconsumer;
+    @GetMapping("/consume-superhero")
+    public String manuallyConsumeSuperhero() {
+        try {
+            superheroConsumer.consumeSuperhero();
+            return "Superhero messages consumed successfully.";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error consuming superhero messages: " + e.getMessage();
+        }
     }
 
     @GetMapping("/update_superhero_async")
@@ -70,23 +85,8 @@ public class SuperheroController {
 
         // Send the message to the queue
         SendMessageResult result = amazonSQS.sendMessage(sendMessageRequest);
-
-        System.out.println("Message Sent Response:");
-        System.out.println("Message ID: " + result.getMessageId());
-        System.out.println("MD5 of Message Body: " + result.getMD5OfMessageBody());
-        System.out.println("superHeroName: " + superHeroName);
-
-
         return String.format("Message sent to queue with message id %s and superHero %s", result.getMessageId(), superHeroName);
     }
-    /*
-      for(int i = 0;i<100;i++){
-            ReceiveMessageResponse res = sqsClient.receiveMessage(ReceiveMessageRequest.builder()
-                    .queueUrl(sqsconfig.getQueueUrl()).build());
-            res.messages().forEach(message -> System.out.println("message " + message.body()));
-
-        }
-    */
 
     @GetMapping("/superhero")
     public Superhero getSuperhero(@RequestParam(value = "name", defaultValue = "Batman") String name,
@@ -98,10 +98,9 @@ public class SuperheroController {
 
         return superheroService.getSuperhero(name, universe);
     }
-    @GetMapping("/get_message_from_queue")
-    public String getMessage() {
-        return superheroConsumer.consumeSuperhero();
-    }
+
+
+
     @PostMapping("/superhero")
     public Superhero persistSuperhero(@RequestBody SuperheroRequestBody superherorequestBody){
         System.out.println("Superhero " + superherorequestBody.getName() + " added in " + superherorequestBody.getUniverse() + " universe");
