@@ -42,10 +42,10 @@ public class SuperheroController {
         this.superheroConsumer = superheroConsumer;
     }
 
-
+    //OPERTION FOR SQS QUEUE
     @GetMapping("/hello")
     public String hello(
-            @RequestParam(value = "username", defaultValue = "World") String superHeroName,
+            @RequestParam(value = "superHeroName", defaultValue = "World") String superHeroName,
             @RequestParam(value = "universe", defaultValue = "Marvel") String universe) {
 
         // Create a JSON-like message body
@@ -87,6 +87,9 @@ public class SuperheroController {
         SendMessageResult result = amazonSQS.sendMessage(sendMessageRequest);
         return String.format("Message sent to queue with message id %s and superHero %s", result.getMessageId(), superHeroName);
     }
+
+
+    //SIMPLE CRUD OPERATION FOR DATABASE
 
     @GetMapping("/superhero")
     public Superhero getSuperhero(@RequestParam(value = "name", defaultValue = "Batman") String name,

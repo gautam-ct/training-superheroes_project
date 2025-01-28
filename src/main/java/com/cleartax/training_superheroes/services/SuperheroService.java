@@ -23,24 +23,25 @@ public class SuperheroService {
         } else if (universe != null) {
             return getByUniverse(universe);
         } else {
-            throw new RuntimeException("Invalid query parameters");
+            return null;
         }
     }
 
     public Superhero updateSuperhero(String name , String universe , SuperheroRequestBody updateDeatails){
-            Superhero superhero = getByNameAndUniverse(name, universe);
+            Superhero superhero = getByName(name);
             superhero.setName(updateDeatails.getName());
             superhero.setUniverse(updateDeatails.getUniverse());
             return superheroRepository.save(superhero);
     }
 
-    private Superhero getByName(String name){
+    public Superhero getByName(String name){
         Superhero superhero = superheroRepository.findByName(name);
         if(null != superhero){
+            System.out.println("You are checking superHero name " + superhero);
             return superhero;
         }
         else{
-            System.out.println("Superhero not found");
+            System.out.println("Superhero not found when trying to get superHero name ");
             return null;
         }
     }
@@ -51,15 +52,16 @@ public class SuperheroService {
             return superhero;
         }
         else{
-            System.out.println("Superhero not found");
+            System.out.println("Superhero not found when trying to get superHero universe ");
             return null;
         }
     }
 
-    private  Superhero getByNameAndUniverse(String name, String universe){
+    public   Superhero getByNameAndUniverse(String name, String universe){
         Superhero superhero = superheroRepository.findByNameAndUniverse(name, universe);
         if (superhero == null) {
-            System.out.println("Superhero not found");
+            System.out.println("Superhero not found when trying to access getByNameAndUniverse ");
+            return null;
 
         }
         return superhero;

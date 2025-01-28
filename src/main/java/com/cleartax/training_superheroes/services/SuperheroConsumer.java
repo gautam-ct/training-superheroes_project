@@ -6,9 +6,13 @@ import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.cleartax.training_superheroes.config.SqsConfig;
 import com.cleartax.training_superheroes.dto.Superhero;
+import com.cleartax.training_superheroes.dto.SuperheroRequestBody;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service
 public class SuperheroConsumer {
@@ -22,14 +26,12 @@ public class SuperheroConsumer {
     @Autowired
     private SuperheroService superheroService;
 
-    @Scheduled(fixedRate = 10000) // Automatically runs every 10 seconds
+    @Scheduled(fixedRate = 10000)
     public void scheduledConsumeSuperhero() {
-        // Logic remains the same as the earlier implementation
         consumeSuperhero();
     }
 
     public void consumeSuperhero() {
-        // Same logic as before for receiving, processing, and deleting messages
         try {
             ReceiveMessageResult receiveResult = amazonSQS.receiveMessage(new ReceiveMessageRequest()
                     .withQueueUrl("http://sqs.ap-south-1.localhost.localstack.cloud:4566/000000000000/superhero-queue")
@@ -46,11 +48,30 @@ public class SuperheroConsumer {
                     String messageBody = message.getBody();
                     System.out.println("Received message: " + messageBody);
 
-                    Superhero superhero = superheroService.getSuperhero(messageBody, null);
-                    if (superhero != null) {
-                        System.out.println("Superhero found in the database: " + superhero.getName());
+                    // Parse the JSON message to extract fields
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    Map<String, String> messageMap = objectMapper.readValue(messageBody, Map.class);
+                    String superHeroName = messageMap.get("superHeroName");
+                    String universe = messageMap.get("universe");
+                    String power = messageMap.get("power");
+
+                    // Check if the superhero exists in the database
+                    Superhero existingSuperhero = superheroService.getByName(superHeroName);
+
+                    if (existingSuperhero != null) {
+                        // If superhero exists, create the request body for the update operation
+                        SuperheroRequestBody updatedDetails = SuperheroRequestBody.builder()
+                                .name(superHeroName)
+                                .universe(universe)
+                                .power(power)
+                                .build();
+
+                        // Update the superhero using the service
+                        System.out.println("Superhero updated: ");
+                        Superhero updatedSuperhero = superheroService.updateSuperhero(superHeroName, universe, updatedDetails);
                     } else {
-                        System.out.println("Superhero not found in the database: " + messageBody);
+                        // If superhero doesn't exist, log the information
+                        System.out.println("Superhero with name " + superHeroName + " and universe " + universe + " not found in the database.");
                     }
 
                     amazonSQS.deleteMessage(new DeleteMessageRequest()
@@ -60,12 +81,11 @@ public class SuperheroConsumer {
                     System.out.println("Deleted message from the queue: " + messageBody);
                 } catch (Exception e) {
                     System.err.println("Error processing message: " + message.getBody());
-                    e.printStackTrace();
+
                 }
             });
         } catch (Exception e) {
             System.err.println("Error consuming messages from the queue.");
-            e.printStackTrace();
         }
     }
 }
