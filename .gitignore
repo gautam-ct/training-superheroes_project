@@ -19,6 +19,10 @@ target/
 *.iml
 *.ipr
 
+#importent info
+/src/main/resources/application.properties
+/pom.xml
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/

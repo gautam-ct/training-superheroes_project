@@ -46,14 +46,14 @@ public class SuperheroController {
 
 
     @GetMapping("/hello")
-    public String hello(@RequestParam(value = "username", defaultValue = "World") String username) {
+    public String hello(@RequestParam(value = "username", defaultValue = "World") String superHeroName) {
         // Send the message to LocalStack
         amazonSQS.sendMessage(new com.amazonaws.services.sqs.model.SendMessageRequest()
                 .withQueueUrl("http://sqs.ap-south-1.localhost.localstack.cloud:4566/000000000000/superhero-queue") // Your LocalStack queue URL
-                .withMessageBody("Travis head")); // Message body
+                .withMessageBody(superHeroName)); // Message body
 
 
-        return String.format("Sqs queue name %s!", username);
+        return String.format("The superHeroName  %s!", superHeroName);
     }
 
     @GetMapping("/update_superhero_async")
